@@ -18,7 +18,15 @@ pip3 install -r requirements.txt
 ```
 docker-compose up -d
 ```
-
+5. Añadir variable de entorno ``FLASK_APP``:
+- Si está en windows ejecutar:
+```
+set "FLASK_APP=entrypoint"
+```
+- Si está en unix:
+```
+export FLASK_APP="entrypoint"
+```
 6. Ejecutar en modo pruebas usando:
 ```
 flask run
