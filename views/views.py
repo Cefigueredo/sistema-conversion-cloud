@@ -10,7 +10,7 @@ from models import db, User, UserSchema, ConversionTask, ConversionTaskSchema
 user_schema = UserSchema()
 conversion_task_schema = ConversionTaskSchema()
 
-class SignInView(Resource):
+class SignUpView(Resource):
     def post(self):
         new_user = User(
             username=request.json["username"], email=request.json["email"], password=request.json["password"])
@@ -30,3 +30,15 @@ class SignInView(Resource):
         db.session.delete(user)
         db.session.commit()
         return '', 204
+
+class SignInView(Resource):
+
+    def post(self):
+        usuario = User.query.filter(User.username == request.json["username"],
+                                    User.password == request.json["password"]).first()
+        db.session.commit()
+        if usuario is None:
+            return "User does not exist", 404
+        else:
+            token_de_acceso = create_access_token(identity=usuario.id)
+            return {"mensaje": "Successfully signed in", "token": token_de_acceso}
