@@ -1,15 +1,26 @@
 from datetime import datetime
-import enum
+from email.policy import default
+from flask_sqlalchemy import SQLAlchemy
+from marshmallow import fields, Schema
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+from enum import Enum
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
-from app import db
+from dotenv import load_dotenv
+import os
+import logging
 
+LOGGER = logging.getLogger(__name__)
+load_dotenv()
+
+db = SQLAlchemy()
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(50), nullable=False)
+    conversion_tasks = db.relationship('ConversionTask', cascade='all, delete, delete-orphan')
 
     def __repr__(self):
         return f"<User {self.email}>"
@@ -28,10 +39,10 @@ class User(db.Model):
 
 
 # TODO add status enum to conversion task
-class Status(enum.Enum):
-    UPLOADED = 1
-    PROCESSED = 2
-    CD = 3
+class TaskStatus(Enum):
+    IN_PROGRESS = 'IN_PROGRESS'
+    UPLOADED = 'UPLOADED'
+    PROCESSED ='PROCESSED'
 
 
 class ConversionTask(db.Model):
@@ -39,13 +50,10 @@ class ConversionTask(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     started_at = db.Column(db.DateTime, default=datetime.utcnow())
     finished_at = db.Column(db.DateTime, nullable=True)
-    status = db.Column(db.String(10))
+    status = db.Column(db.String(10), default=TaskStatus.IN_PROGRESS.value)
     user = db.Column(
-        db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False
+        db.Integer, db.ForeignKey("user.id"), nullable=False
     )
-    input_file_id = db.relationship("File", uselist=False, backref="conversion_task")
-    output_file_id = db.relationship("File", uselist=False, backref="conversion_task")
-
     def __repr__(self):
         return f"<Conversion Task {self.id} for user {self.user}>"
 
@@ -57,9 +65,14 @@ class ConversionTask(db.Model):
     def get_all():
         return ConversionTask.query.all()
 
+class UserSchema(SQLAlchemyAutoSchema):
+    class Meta: 
+        model = User
+        includde_relationships = True
+        load_instance = True
 
-class File(db.Model):
-    __tablename__ = "file"
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4())
-    extension = db.Column(db.String(5))  # TODO add enum
-    conversion_id = db.Column(db.Integer, db.ForeignKey("conversion_task.id"))
+class ConversionTaskSchema(SQLAlchemyAutoSchema):
+    class Meta: 
+        model = ConversionTask
+        includde_relationships = True
+        load_instance = True
