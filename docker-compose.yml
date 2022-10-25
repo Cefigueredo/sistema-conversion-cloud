@@ -1,22 +1,57 @@
 version: '3'
 
 services:
-  db:
+
+  conversion_toolDB:
     image: postgres:14.4
-    restart: always
     ports:
       - "5432:5432"
-    command: celery --app tasks.task.celery worker --loglevel=info
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
-      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
     container_name: conversion_toolDB
     volumes:
-      - ./postgres:/var/lib/postgresql/data
-    depends_on:
-      - redis
+      - ./:/conversion_toolDB
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 1000M
+        reservations:
+          cpus: '0.1'
+          memory: 1000M
+
+  app:
+    container_name: app
+    volumes:
+      - ./:/mnt/
+    build: ./
+    working_dir: /
+    command: celery --app tasks.task.celery worker --loglevel=info -l  info & gunicorn -b 0.0.0.0:8000 app:app
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
+      UPLOAD_FOLDER: /uploads
+      PYTHONUNBUFFERED: 1
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 1000M
+        reservations:
+          cpus: '0.1'
+          memory: 1000M
+    depends_on: 
+      - conversion_toolDB
 
   redis:
-    image: redis:6-alpine
+    image: redis
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 1000M
+        reservations:
+          cpus: '0.1'
+          memory: 1000M
