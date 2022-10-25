@@ -1,10 +1,10 @@
 import imp
 from pydoc import doc
-from flask import request
+from flask import request, jsonify
 from flask_jwt_extended import jwt_required, create_access_token
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
-
+from tasks import create_task
 from models import db, User, UserSchema, ConversionTask, ConversionTaskSchema
 
 user_schema = UserSchema()
@@ -42,3 +42,11 @@ class SignInView(Resource):
         else:
             token_de_acceso = create_access_token(identity=usuario.id)
             return {"mensaje": "Successfully signed in", "token": token_de_acceso}
+
+class TasksView(Resource):
+    
+    def post(self):
+        content = request.json
+        task_type = content["type"]
+        task = create_task.delay(int(task_type))
+        return jsonify({"task_id": task.id}), 202
