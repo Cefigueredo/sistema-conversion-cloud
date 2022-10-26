@@ -12,8 +12,10 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       CELERY_BROKER_URL: ${CELERY_BROKER_URL}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
-      UPLOAD_FOLDER: /app/uploads
+      FILES_FOLDER: /app/files
       PYTHONUNBUFFERED: 1
+      EMAIL_DOMAIN: ${EMAIL_DOMAIN}
+      EMAIL_API_KEY: ${EMAIL_API_KEY}
     deploy:
       resources:
         limits:
