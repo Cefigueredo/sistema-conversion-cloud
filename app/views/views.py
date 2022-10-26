@@ -50,3 +50,8 @@ class TasksView(Resource):
         task_type = content["type"]
         task = create_task.delay(int(task_type))
         return jsonify({"task_id": task.id}), 202
+
+class ConversionTask(Resource):
+
+    def put(self, id_task):
+        pass
