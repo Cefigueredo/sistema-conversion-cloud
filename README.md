@@ -23,7 +23,7 @@ pip3 install -r requirements.txt
 ```
 4. Copiar el ```env.template``` y renombar a ```.env```
 5. Cambiar variables de entorno necesarias
-6. Ejecutar base de datos usando: 
+6. Ejecutar aplicación usando: 
 ```
 docker-compose up -d
 ```
